@@ -323,7 +323,7 @@ class Shearlet(TransformInterface):
                                                   0.276348304703363, -0.0517766952966369, -0.0263483047033631,
                                                   0.0104933261758408])
         if self.DF is None:
-            directionalFilter = pyshearlab.modulate2(pyshearlab.dfilters('dmaxflat4', 'd')[0] / numpy.sqrt(2), 'c')
+            self.DF = pyshearlab.modulate2(pyshearlab.dfilters('dmaxflat4', 'd')[0] / numpy.sqrt(2), 'c')
 
         self.shearletSystem = pyshearlab.SLgetShearletSystem2D(useGPU=self.useGPU, rows=self.imSize[0],
                                                                cols=self.imSize[1],
