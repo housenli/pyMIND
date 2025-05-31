@@ -371,7 +371,7 @@ class Shearlet(TransformInterface):
             if ((shearletSim['shearLevels'] == self.shearletSystem['shearLevels']).all() and
                     shearletSim['full'] == self.shearletSystem['full'] and
                     shearletSim['QMF'] == self.QMF and
-                    shearletSim['DF'] == self.DF):
+                    (shearletSim['DF'] == self.DF).all()):
                 return shearletSim['mStat'], True
             else:
                 return None, False
