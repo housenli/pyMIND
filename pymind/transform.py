@@ -195,6 +195,8 @@ class TransformInterface1d(TransformInterface):
                   'cGap': gap of the constraint || Phi (u-v) ||_inf - th
                       tm: computation cost
         """
+        
+        g = cvxpy.Variable(self.dataSize[0])
         if rType == 'TV':
             r = cvxpy.norm(cvxpy.diff(g), 1)
         elif rType == 'HK':
@@ -205,7 +207,6 @@ class TransformInterface1d(TransformInterface):
             r = R_func(g)
         else:
             raise ValueError("Invalid rType specified. Use 'TV', 'HK', or 'custom'.")
-        g = cvxpy.Variable(self.dataSize[0])
         transformed_residuals = self.forward(g - data)
         constraints = [cvxpy.norm_inf(transformed_residuals) <= th]
 
