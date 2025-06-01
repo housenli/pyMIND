@@ -454,6 +454,8 @@ class Shearlet(TransformInterface2d):
                                                   0.276348304703363, -0.0517766952966369, -0.0263483047033631,
                                                   0.0104933261758408])
                                     A 1D quadrature mirror filter defining the wavelet component of the shearlets.
+        
+        Note: The shearlet system is constructed using the pyshearlab library, which requires image sizes to be at least 249x249.
         '''
         self.imSize = imSize
         self.QMF = quadratureMirrorFilter
