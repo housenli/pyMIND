@@ -8,6 +8,7 @@ import pywt
 from numba import jit
 import warnings
 import os
+import cvxpy
 
 
 """
@@ -17,8 +18,228 @@ Interface for all the transforms
 warnings.filterwarnings('ignore')
 
 class TransformInterface:
-    adjoint = False
 
+    def __init__(self, dataSize):
+        """
+        Initializes a transform object
+
+        Usage:
+
+            myTransform = pymind.transform.TransformInterface(dataSize)
+
+        Input:
+
+            dataSize: Size of the images for which the transform is to be used on.
+        """
+        self.dataSize = dataSize
+    
+    def msQuantile(self, alpha=0.9, nDraw=5000, seed=100, toSave=True, toDisp=True, check=500, dir='./simulations/', filename=None):
+        '''
+        Simulate the lower alpha quantile of multiscale statistics
+
+        Usage:
+
+            q, mStat = transform.msQuantile()
+
+        Input:
+
+            alpha: optional (default alpha = 0.9)
+                   significance level
+            nDraw: optional (default nDraw = 5000)
+                   number of draws in the simulation
+            seed: optional (default seed = 100)
+                  seed used in random draws
+            toSave: optional (default toSave = True)
+                    Logical value that specifies whether or not the simulation should be saved to a '.pkl' file.
+            toDisp: optional (default toDisp = True)
+                    Logical value that specifies whether or not information about iterations should be printed onto the
+                    console while the function runs.
+            check: optional (default check = 500)
+                   If toDisp == True, an update about the current iteration is printed onto the console every <<check>>
+                   iterations.
+            dir: optional (default dir = './simulations/')
+                 If toSave == True this specifies the directory in which the file should be stored in.
+            filename: optional (default filename = 'simQ_<<type(transform)>>_r_<<nDraw>>_sz_<<self.imSize[0]>>_<<self.imSize[1]>>.pkl')
+                      Name of the data file created
+
+        Output:
+
+            q: the simulated lower alpha quantile
+            mStat: the simulated values of multiscale statistics
+        '''
+        ndim = len(self.dataSize)
+        if filename is None:
+            if ndim == 2:
+                filename = 'simQ_{}_r_{}_sz_{}_{}.pkl'.format(type(self).__name__, nDraw, self.dataSize[0], self.dataSize[1])
+            elif ndim == 1:
+                filename = 'simQ_{}_r_{}_sz_{}.pkl'.format(type(self).__name__, nDraw, self.dataSize[0])
+
+        mStat, simEx = self.checkFile(dir + filename)
+
+        if not simEx:
+            if toDisp:
+                print('Simulate via {} draw ...\n'.format(nDraw))
+                tmAll = time.perf_counter()
+            mStat = numpy.zeros(nDraw)
+            numpy.random.seed(seed)
+            for r in range(nDraw):
+                if (r + 1) % check == 0 and toDisp:
+                    print('\t # {} draws'.format(r + 1))
+                u = numpy.random.normal(size=self.dataSize)
+                mStat[r] = numpy.max(numpy.abs(self.forward(u)))
+            if toDisp:
+                print('End of simulation: {} sec elapsed'.format(time.perf_counter() - tmAll))
+            if toSave:
+                if toDisp:
+                    print('Simulation result is stored!\n')
+                    self.storeSim(mStat, dir + filename) #TODO pull this out in bugfix
+        else:
+            print('Load from previous simulation results!\n')
+
+        q = numpy.quantile(mStat, alpha)
+        return q, mStat
+    
+
+    # checks if file exists and transform is the same
+    # also returns simulated values if the file exists
+    def checkFile(self, filename):
+        '''
+        Helper function to check whether or not the given file contains data about the correct transform
+        '''
+        pass
+
+    # stores simulation and transform in pkl file
+    def storeSim(self, data, filename):
+        '''
+        Helper function to store correct data in a '.pkl' file
+        '''
+        pass
+
+class TransformInterface1d(TransformInterface):
+    """
+    Interface for 1D transforms
+    """
+
+    @property
+    def dataSize(self):
+        return self.dataSize[0]
+
+    @dataSize.setter
+    def dataSize(self, value):
+
+        if isinstance(value, tuple):
+            # Validate that value is a tuple with one element
+            if len(value) != 1:
+                raise ValueError(f"Expected 1D input. Got {len(value)}D input instead.")
+            value = value[0]
+
+        # Validate that value is a positive integer
+        if not isinstance(value, int) or value <= 0:
+            raise ValueError("dataSize must be a positive integer.")
+        self.dataSize = (value,)
+
+    def forward(self, data):
+        """
+        Perform transform on data.
+
+        Usage:
+
+            v = transform.forward(u)
+
+        Input:
+
+            data: The data to be transformed
+        """
+        pass
+
+    def multiscale(self, data, th, maxIt=500, solver=cvxpy.CLARABEL, toDisp=2, rType='TV', k_sob=1, R_func=None):
+        """
+        Multiscale regression via R minimization under multiscale constraints
+            minimize_u R(u) subject to ||Phi (u-v)||_inf <= th
+
+        Usage:
+
+            x, stat = transform.multiscale(data, th)
+
+        Input:
+
+            data: data array
+            th: threshold in multiscale constraint
+            maxIt: optional (default maxIt = 500).
+                   maximum number of iterations
+            solver: optional (default solver = cvxpy.CLARABEL)
+                    solver to use in the optimization problem
+            toDisp: optional (default toDisp = 2)
+                    Logical value that controls information displayed to the user while the algorithm is running.
+                    0: no information
+                    1: only information in form of text on the console
+                    2: additionally the current data is displayed periodically every <<check>> iteration
+            rType: optional (default rType = 'TV')
+                   regression type using
+                   'TV': proximal operator of TV ( minimize_{u} 1/2||u - v||_2^2  + lambda||\nabla u||_1 )
+                   'HK': proximal operator of HK ( minimize_{u} 1/2||u - v||_2^2  + lambda/2 ||D^ u||_2^2 )
+                   'custom': proximal operator of a custom regression function (minimize_{u} R(u))
+            k_sob: optional (default k_sob = 1)
+                   if rType == 'HK' specifies Sobolev inversion parameter
+            R_func: optional (default R_func = None)
+                   if rType == 'custom' specifies a custom regression function R(u) to be minimized.
+                   Has to be a callable function that takes a cvxpy variable as input and returns a cvxpy expression.
+
+
+
+        Output:
+
+            x: solution vector
+            stat: details of each outer iteration
+                  'oVal': objective value R(u)
+                  'cGap': gap of the constraint || Phi (u-v) ||_inf - th
+                      tm: computation cost
+        """
+        if rType == 'TV':
+            r = cvxpy.norm(cvxpy.diff(g), 1)
+        elif rType == 'HK':
+            r = cvxpy.norm(cvxpy.diff(g, k_sob), 2)**2 / 2
+        elif rType == 'custom':
+            if R_func is None:
+                raise ValueError("R_func must be provided when rType is 'custom'.")
+            r = R_func(g)
+        else:
+            raise ValueError("Invalid rType specified. Use 'TV', 'HK', or 'custom'.")
+        g = cvxpy.Variable(self.dataSize[0])
+        transformed_residuals = self.forward(g - data)
+        constraints = [cvxpy.norm_inf(transformed_residuals) <= th]
+
+        # Solve the problem
+        problem = cvxpy.Problem(cvxpy.Minimize(r), constraints)
+        #problem = cp.Problem(cp.Minimize(R), [g >= 0, cp.sum(g) == 1])
+        # at each solver iteration, the current objective value is appended to stat['oVal']
+
+        problem.solve(solver = solver, verbose = toDisp > 0, max_iter = maxIt)
+
+        if problem.status != cvxpy.OPTIMAL:
+            if toDisp:
+                print("Optimization problem has not been solved optimally. Check the input data and parameters.")
+        x = g.value
+        stat = {
+            'oVal': r.value,
+            'cGap': cvxpy.norm_inf(transformed_residuals).value - th,
+            'tm': problem.solver_stats.solve_time
+        }
+        return x, stat
+
+class TransformInterface2d(TransformInterface):
+    adjoint = False
+   
+    @property
+    def imSize(self):
+        return self.dataSize
+
+    @imSize.setter
+    def imSize(self, value):
+        # Validate that value is a tuple of two positive integers
+        if not isinstance(value, tuple) or len(value) != 2 or not all(isinstance(i, int) and i > 0 for i in value):
+            raise ValueError("imSize must be a tuple of two positive integers.")
+        self.dataSize = value
 
     def ctranspose(self):
         """
@@ -198,86 +419,7 @@ class TransformInterface:
         return x, stat
 
 
-    def msQuantile(self, alpha=0.9, nDraw=5000, seed=100, toSave=True, toDisp=True, check=500, dir='./simulations/', filename=None):
-        '''
-        Simulate the lower alpha quantile of multiscale statistics
-
-        Usage:
-
-            q, mStat = transform.msQuantile()
-
-        Input:
-
-            alpha: optional (default alpha = 0.9)
-                   significance level
-            nDraw: optional (default nDraw = 5000)
-                   number of draws in the simulation
-            seed: optional (default seed = 100)
-                  seed used in random draws
-            toSave: optional (default toSave = True)
-                    Logical value that specifies whether or not the simulation should be saved to a '.pkl' file.
-            toDisp: optional (default toDisp = True)
-                    Logical value that specifies whether or not information about iterations should be printed onto the
-                    console while the function runs.
-            check: optional (default check = 500)
-                   If toDisp == True, an update about the current iteration is printed onto the console every <<check>>
-                   iterations.
-            dir: optional (default dir = './simulations/')
-                 If toSave == True this specifies the directory in which the file should be stored in.
-            filename: optional (default filename = 'simQ_<<type(transform)>>_r_<<nDraw>>_sz_<<self.imSize[0]>>_<<self.imSize[1]>>.pkl')
-                      Name of the data file created
-
-        Output:
-
-            q: the simulated lower alpha quantile
-            mStat: the simulated values of multiscale statistics
-        '''
-
-        if filename is None:
-            filename = 'simQ_{}_r_{}_sz_{}_{}.pkl'.format(type(self).__name__, nDraw, self.imSize[0], self.imSize[1])
-
-        mStat, simEx = self.checkFile(dir + filename)
-
-        if not simEx:
-            if toDisp:
-                print('Simulate via {} draw ...\n'.format(nDraw))
-                tmAll = time.perf_counter()
-            mStat = numpy.zeros((nDraw, 1))
-            numpy.random.seed(seed)
-            for r in range(nDraw):
-                if (r + 1) % check == 0 and toDisp:
-                    print('\t # {} draws'.format(r + 1))
-                u = numpy.random.normal(size=self.imSize)
-                mStat[r] = numpy.max(numpy.abs(self.forward(u)))
-            if toDisp:
-                print('End of simulation: {} sec elapsed'.format(time.perf_counter() - tmAll))
-            if toSave:
-                if toDisp:
-                    print('Simulation result is stored!\n')
-                    self.storeSim(mStat, dir + filename)
-        else:
-            print('Load from previous simulation results!\n')
-
-        q = numpy.quantile(mStat, alpha)
-        return q, mStat
-
-    # checks if file exists and transform is the same
-    # also returns simulated values if the file exists
-    def checkFile(self, filename):
-        '''
-        Helper function to check whether or not the given file contains data about the correct transform
-        '''
-        pass
-
-    # stores simulation and transform in pkl file
-    def storeSim(self, data, filename):
-        '''
-        Helper function to store correct data in a '.pkl' file
-        '''
-        pass
-
-
-class Shearlet(TransformInterface):
+class Shearlet2d(TransformInterface2d):
     '''
     Class for the Shearlet operator
     '''
@@ -379,9 +521,54 @@ class Shearlet(TransformInterface):
             return None, False
 
 
-class Wavelet(TransformInterface):
+class Wavelet1d(TransformInterface1d):
     """
-    Class for the Wavelet operator
+    Class for the 1D Wavelet operator
+    """
+    def __init__(self, dataSize, filterType='sym6', wavScale=None):
+        """
+        Initializes a Wavelet operator object
+
+        Usage:
+
+            myWavelet = pymind.transform.Wavelet1d(dataSize)
+
+        Input:
+
+            dataSize: Size of the data for which the transform is to be used on.
+            filterType: optional (default filterType = 'sym6')
+                        Wavelet to use. To get a list of possible wavelets use pywt.families() and pywt.wavelist().
+            wavScale: optional (default wavScale = None)
+                      Wavelet scale.
+        """
+        self.dataSize = dataSize
+        self.filterType = filterType
+        self.wavScale = wavScale
+        self.wavelet_matrix = numpy.vstack([col for col in pywt.wavedec(numpy.eye(dataSize), filterType, level=wavScale, axis=0, mode='periodization')])
+    def forward(self, data):
+        return self.wavelet_matrix @ data
+    
+    def storeSim(self, data, filename):
+        if not os.path.exists(os.path.dirname(filename)):
+            os.makedirs(os.path.dirname(filename))
+        waveletSim = {'mStat': data, 'filterType': self.filterType, 'minScale': self.minScale, 'dataSize': self.dataSize}
+        pickle.dump(waveletSim, open(filename, 'wb'))
+
+    def checkFile(self, filename):
+        try:
+            waveletSim = pickle.load(open(filename, 'rb'))
+            if waveletSim['filterType'] == self.filterType and waveletSim['minScale'] == self.minScale and waveletSim[
+                'dataSize'] == self.dataSize:
+                return waveletSim['mStat'], True
+            else:
+                return None, False
+        except:
+            return None, False
+        
+
+class Wavelet2d(TransformInterface2d):
+    """
+    Class for the Wavelet operator for 2D images
     """
 
     def __init__(self, imSize, filterType='sym6', wavScale=2):
@@ -390,7 +577,7 @@ class Wavelet(TransformInterface):
 
         Usage:
 
-            myWavelet = pymind.transform.Wavelet(imSize)
+            myWavelet = pymind.transform.Wavelet2d(imSize)
 
         Input:
 
@@ -432,7 +619,7 @@ class Wavelet(TransformInterface):
             return None, False
 
 
-class Cube(TransformInterface):
+class Cube(TransformInterface2d):
     """
     Class for the Cube operator
     """
