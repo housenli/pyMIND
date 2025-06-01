@@ -544,7 +544,7 @@ class Wavelet1d(TransformInterface1d):
         self.dataSize = dataSize
         self.filterType = filterType
         self.wavScale = wavScale
-        self.wavelet_matrix = numpy.vstack([col for col in pywt.wavedec(numpy.eye(dataSize), filterType, level=wavScale, axis=0, mode='periodization')])
+        self.wavelet_matrix = numpy.vstack([col for col in pywt.wavedec(numpy.eye(dataSize[0]), filterType, level=wavScale, axis=0, mode='periodization')])
     def forward(self, data):
         return self.wavelet_matrix @ data
     
