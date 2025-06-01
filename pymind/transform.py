@@ -195,12 +195,12 @@ class TransformInterface1d(TransformInterface):
                   'cGap': gap of the constraint || Phi (u-v) ||_inf - th
                       tm: computation cost
         """
-        
+
         g = cvxpy.Variable(self.dataSize[0])
         if rType == 'TV':
             r = cvxpy.norm(cvxpy.diff(g), 1)
         elif rType == 'HK':
-            r = cvxpy.norm(cvxpy.diff(g, k_sob), 2)**2 / 2
+            r = cvxpy.norm(cvxpy.diff(g, k_sob), 2)
         elif rType == 'custom':
             if R_func is None:
                 raise ValueError("R_func must be provided when rType is 'custom'.")
@@ -420,7 +420,7 @@ class TransformInterface2d(TransformInterface):
         return x, stat
 
 
-class Shearlet2d(TransformInterface2d):
+class Shearlet(TransformInterface2d):
     '''
     Class for the Shearlet operator
     '''
@@ -836,3 +836,29 @@ class Cube(TransformInterface2d):
                 return None, False
         except:
             return None, False
+
+
+# Legacy code for old syntax for 2d Wavelets
+class Wavelet(Wavelet2d):
+    """
+    Legacy class for the Wavelet operator for 2D images.
+    This class is kept for compatibility with older code.
+    Use Wavelet2d or Wavelet1d instead, depending on the dimensionality of your data.
+    """
+    def __init__(self, imSize, filterType='sym6', wavScale=2):
+        """
+        Initializes a Wavelet operator object
+
+        Usage:
+
+            myWavelet = pymind.transform.Wavelet(imSize)
+
+        Input:
+
+            imSize: Size of the images for which the transform is to be used on.
+            filterType: optional (default filterType = 'sym6')
+                        Wavelet to use. To get a list of possible wavelets use pywt.families() and pywt.wavelist().
+            wavScale: optional (default wavScale = 2)
+                      Wavelet scale.
+        """
+        super().__init__(imSize, filterType, wavScale)
