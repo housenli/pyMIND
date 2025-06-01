@@ -122,7 +122,7 @@ class TransformInterface1d(TransformInterface):
 
     @property
     def dataSize(self):
-        return self.dataSize[0]
+        return self.dataSize_
 
     @dataSize.setter
     def dataSize(self, value):
@@ -136,7 +136,7 @@ class TransformInterface1d(TransformInterface):
         # Validate that value is a positive integer
         if not isinstance(value, int) or value <= 0:
             raise ValueError("dataSize must be a positive integer.")
-        self.dataSize = (value,)
+        self.dataSize_ = (value,)
 
     def forward(self, data):
         """
