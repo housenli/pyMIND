@@ -30,4 +30,4 @@ Examples, as well as experiments in the paper \[1\], can be run with the file [e
 
 ## Copyright
 
-**pyMIND** was written by [Leo Claus Weber](https://github.com/leoc-weber) and [Housen Li](https://github.com/housenli). 
+**pyMIND** was written by [Leo Claus Weber](https://github.com/leoc-weber), [Housen Li](https://github.com/housenli) and [Jan Victor Otte](https://github.com/JanVictor-Otte). 
