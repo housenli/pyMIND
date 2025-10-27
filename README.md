@@ -13,12 +13,6 @@ The implementation works exclusively for 2D grayscale images, and utilizes the [
 \[1\] del Alamo, M., Li, H., Munk, A., & Werner, F. (2020). Variational multiscale nonparametric regression: Algorithms and implementation. Algorithms, [13(11), 296](https://doi.org/10.3390/a13110296).
 
 ## Installation
-The codes require the following package not available on PyPI:
-- **pyShearlab** from https://github.com/stefanloock/pyshearlab
-
-It can be installed via:
-
-    pip install https://github.com/stefanloock/pyshearlab/archive/master.zip
 
 To install this package run:
 

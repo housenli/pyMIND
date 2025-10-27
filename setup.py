@@ -7,7 +7,7 @@ require = open(os.path.join(root_path, 'requirements.txt')).readlines()
 
 setup(
     name='pymind',
-    version='1.0.0',
+    version='1.0.1',
     url='https://github.com/housenli/pyMIND',
     description='Python implementation of Multiscale Nemirovski Dantzig Estimators',
     packages=find_packages(),
