@@ -1,4 +1,4 @@
-import pyshearlab
+import pyshearlab_mind
 import numpy
 from pymind import prox
 import matplotlib.pyplot as plt
@@ -468,16 +468,16 @@ class Shearlet(TransformInterface2d):
                                                   0.276348304703363, -0.0517766952966369, -0.0263483047033631,
                                                   0.0104933261758408])
         if self.DF is None:
-            self.DF = pyshearlab.modulate2(pyshearlab.dfilters('dmaxflat4', 'd')[0] / numpy.sqrt(2), 'c')
+            self.DF = pyshearlab_mind.modulate2(pyshearlab_mind.dfilters('dmaxflat4', 'd')[0] / numpy.sqrt(2), 'c')
 
-        self.shearletSystem = pyshearlab.SLgetShearletSystem2D(useGPU=self.useGPU, rows=self.imSize[0],
+        self.shearletSystem = pyshearlab_mind.SLgetShearletSystem2D(useGPU=self.useGPU, rows=self.imSize[0],
                                                                cols=self.imSize[1],
                                                                nScales=nScales, shearLevels=shearLevels, full=full,
                                                                directionalFilter=self.DF,
                                                                quadratureMirrorFilter=self.QMF)
 
         deltaFun = numpy.fft.fftshift(numpy.fft.ifft2(numpy.ones(imSize))) * numpy.sqrt(numpy.prod(imSize))
-        slcoef = pyshearlab.SLsheardec2D(deltaFun, self.shearletSystem)
+        slcoef = pyshearlab_mind.SLsheardec2D(deltaFun, self.shearletSystem)
         self.normShe = numpy.zeros((self.shearletSystem['nShearlets'], 1))
         for s in range(self.shearletSystem['nShearlets']):
             self.normShe[s] = numpy.linalg.norm(slcoef[:, :, s]) / numpy.sqrt(slcoef[:, :, s].size)
@@ -488,17 +488,17 @@ class Shearlet(TransformInterface2d):
             if self.adjoint:
                 for s in range(self.shearletSystem['nShearlets']):
                     v[:, :, s] = v[:, :, s] * self.normShe[s]
-                prodimg = pyshearlab.SLshearrec2D(v, self.shearletSystem)
+                prodimg = pyshearlab_mind.SLshearrec2D(v, self.shearletSystem)
             else:
-                prodimg = pyshearlab.SLsheardec2D(v, self.shearletSystem)
+                prodimg = pyshearlab_mind.SLsheardec2D(v, self.shearletSystem)
                 for s in range(self.shearletSystem['nShearlets']):
                     prodimg[:, :, s] = prodimg[:, :, s] / self.normShe[s]
 
         else:
             if self.adjoint:
-                prodimg = pyshearlab.SLshearrec2D(v, self.shearletSystem)
+                prodimg = pyshearlab_mind.SLshearrec2D(v, self.shearletSystem)
             else:
-                prodimg = pyshearlab.SLsheardec2D(v, self.shearletSystem)
+                prodimg = pyshearlab_mind.SLsheardec2D(v, self.shearletSystem)
 
         return prodimg
 
