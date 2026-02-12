@@ -29,7 +29,7 @@ class TransformInterface:
 
         Input:
 
-            dataSize: Size of the images for which the transform is to be used on.
+            dataSize: Size of the data for which the transform is to be used on.
         """
         self.dataSize = dataSize
     
