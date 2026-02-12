@@ -16,6 +16,10 @@ The implementation works exclusively for 2D grayscale images, and utilizes the [
 
 To install this package run:
 
+    pip install pymindlabs
+    
+or
+
     pip install git+https://github.com/housenli/pyMIND.git
 
 ## Example
