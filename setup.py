@@ -7,8 +7,8 @@ require = open(os.path.join(root_path, 'requirements.txt')).readlines()
 
 setup(
     name='PyMINDLab',
-    version='1.0.2',
-    url='https://github.com/housenli/pyMIND',
+    version='1.0.3',
+    url='https://github.com/housenli/PyMIND',
     description='Python implementation of Multiscale Nemirovski Dantzig Estimators',
     packages=find_packages(),
     package_dir={'PyMINDLab': 'pymindlab'},
