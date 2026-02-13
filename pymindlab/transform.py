@@ -1,6 +1,6 @@
 import pyshearlab_mind
 import numpy
-from pymind import prox
+from pymindlab import prox
 import matplotlib.pyplot as plt
 import time
 import pickle
@@ -25,7 +25,7 @@ class TransformInterface:
 
         Usage:
 
-            myTransform = pymind.transform.TransformInterface(dataSize)
+            myTransform = pymindlab.transform.TransformInterface(dataSize)
 
         Input:
 
@@ -433,7 +433,7 @@ class Shearlet(TransformInterface2d):
 
         Usage:
 
-            myShearlet = pymind.transform.Shearlet(imSize)
+            myShearlet = pymindlab.transform.Shearlet(imSize)
 
         Input:
 
@@ -534,7 +534,7 @@ class Wavelet1d(TransformInterface1d):
 
         Usage:
 
-            myWavelet = pymind.transform.Wavelet1d(dataSize)
+            myWavelet = pymindlab.transform.Wavelet1d(dataSize)
 
         Input:
 
@@ -580,7 +580,7 @@ class Wavelet2d(TransformInterface2d):
 
         Usage:
 
-            myWavelet = pymind.transform.Wavelet2d(imSize)
+            myWavelet = pymindlab.transform.Wavelet2d(imSize)
 
         Input:
 
@@ -633,7 +633,7 @@ class Cube(TransformInterface2d):
 
         Usage:
 
-            myCube = pymind.transform.Cube(imSize)
+            myCube = pymindlab.transform.Cube(imSize)
 
         Input:
 
@@ -853,7 +853,7 @@ class Wavelet(Wavelet2d):
 
         Usage:
 
-            myWavelet = pymind.transform.Wavelet(imSize)
+            myWavelet = pymindlab.transform.Wavelet(imSize)
 
         Input:
 

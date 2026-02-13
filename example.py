@@ -1,4 +1,4 @@
-from pymind import transform, util
+from pymindlab import transform, util
 import numpy as np
 import imageio
 
